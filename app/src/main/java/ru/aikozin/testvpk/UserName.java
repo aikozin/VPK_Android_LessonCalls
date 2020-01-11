@@ -60,7 +60,6 @@ public class UserName extends AppCompatActivity {
                                 intent.putExtra("code", code);
                                 intent.putExtra("codeTest", codeTest);
                                 intent.putIntegerArrayListExtra("questionOrder", (ArrayList<Integer>) questionOrder);
-                                intent.putExtra("order", 0);
                                 startActivity(intent);
                                 overridePendingTransition(R.anim.fadein, R.anim.fadeout);
                             } catch (JSONException e) {
