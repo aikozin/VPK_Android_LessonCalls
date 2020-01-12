@@ -183,8 +183,14 @@ public class Question extends AppCompatActivity {
                             }
                             if (status == 101) {
                                 order++;
-                                if (order == questionOrder.size())
-                                    Toast.makeText(Question.this, "Молодец!", Toast.LENGTH_SHORT).show();
+                                if (order == questionOrder.size()) {
+                                    Intent intent = new Intent(Question.this, Result.class);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    intent.putExtra("codeTest", codeTest);
+                                    intent.putExtra("numberInApiTable", numberInApiTable);
+                                    startActivity(intent);
+                                    overridePendingTransition(R.anim.fadein, R.anim.fadeout);
+                                }
                                 else {
                                     setAnswerOnView();
                                 }
