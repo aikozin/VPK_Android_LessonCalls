@@ -30,6 +30,7 @@ public class Question extends AppCompatActivity {
     int order;
     LinearLayout mainLayout;
     JSONArray questions;
+    String name;
 
     //массивы и объекты для хранения выбранных ответов и их отправки на сервак
     Handler handler = new Handler();
@@ -48,6 +49,7 @@ public class Question extends AppCompatActivity {
             jsonConnection = new JSONObject(getIntent().getExtras().getString("jsonConnection"));
             questions = jsonConnection.getJSONArray("questions");
             numberInApiTable = jsonConnection.getInt("numberInApiTable");
+            name = getIntent().getExtras().getString("name");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -57,8 +59,12 @@ public class Question extends AppCompatActivity {
         questionOrder = getIntent().getExtras().getIntegerArrayList("questionOrder");
 
         int order = 0;
+        setAnswerOnView();
+    }
+
+    public void setAnswerOnView () {
         ((TextView) findViewById(R.id.numberQuestion)).setText(order + 1 + " вопрос из " + questionOrder.size());
-        ((TextView) findViewById(R.id.name)).setText("Сашка");
+        ((TextView) findViewById(R.id.name)).setText(name);
         try {
             JSONObject question = questions.getJSONObject(questionOrder.get(order));
             type = question.getInt("type");
@@ -114,7 +120,6 @@ public class Question extends AppCompatActivity {
 
     public void onClickNext (View view) {
         if (type == 1) {
-            //http://192.168.0.7/vpk/test/php/api.php?type=setAnswer&codeTest=101&numberInApiTable=5&numberQuestion=1&answer=[1,1,0,1]
             radioGroup.getCheckedRadioButtonId();
             int select = (int) (findViewById(radioGroup.getCheckedRadioButtonId())).getTag();
             int[] answer = new int[countAnswers];

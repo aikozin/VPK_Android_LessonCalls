@@ -59,6 +59,7 @@ public class UserName extends AppCompatActivity {
                                 intent.putExtra("jsonConnection", String.valueOf(jsonConnection));
                                 intent.putExtra("code", code);
                                 intent.putExtra("codeTest", codeTest);
+                                intent.putExtra("name", name);
                                 intent.putIntegerArrayListExtra("questionOrder", (ArrayList<Integer>) questionOrder);
                                 startActivity(intent);
                                 overridePendingTransition(R.anim.fadein, R.anim.fadeout);
