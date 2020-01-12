@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -30,46 +31,48 @@ public class UserName extends AppCompatActivity {
     }
 
     public void clickStartTest(View view) {
-        EditText editText1 = findViewById(R.id.editText1);
-        EditText editText2 = findViewById(R.id.editText2);
-        EditText editText3 = findViewById(R.id.editText3);
+        String editText1 = ((EditText) findViewById(R.id.editText1)).getText().toString();
+        String editText2 = ((EditText) findViewById(R.id.editText2)).getText().toString();
+        String editText3 = ((EditText) findViewById(R.id.editText3)).getText().toString();
 
-        final String name = editText1.getText().toString() + " "
-                + editText2.getText().toString() + " "
-                + editText3.getText().toString();
-        final String deviceType = "mobile";
+        if (editText1.isEmpty() || editText2.isEmpty() || editText3.isEmpty()) {
+            Toast.makeText(this, "Некоторые поля пусты", Toast.LENGTH_SHORT).show();
+        } else {
+            final String name = editText1 + " " + editText2 + " " + editText3;
+            final String deviceType = "mobile";
 
-        new Thread() {
-            public void run() {
-                String parameters = "type=%s&code=%d&codeTest=%d&deviceType=%s&name=%s";
-                parameters = String.format(parameters, "getQuestionsAndStartTest", code, codeTest, deviceType, name);
-                final JSONObject jsonConnection = API.getJSON(parameters);
-                if (jsonConnection != null) {
-                    handler.post(new Runnable() {
-                        public void run() {
-                            try {
-                                int numberQuestion = jsonConnection.getInt("numberQuestion");
-                                List<Integer> questionOrder = new ArrayList<>();
-                                for (int i = 0; i < numberQuestion; i++)
-                                    questionOrder.add(i);
-                                Collections.shuffle(questionOrder);
+            new Thread() {
+                public void run() {
+                    String parameters = "type=%s&code=%d&codeTest=%d&deviceType=%s&name=%s";
+                    parameters = String.format(parameters, "getQuestionsAndStartTest", code, codeTest, deviceType, name);
+                    final JSONObject jsonConnection = API.getJSON(parameters);
+                    if (jsonConnection != null) {
+                        handler.post(new Runnable() {
+                            public void run() {
+                                try {
+                                    int numberQuestion = jsonConnection.getInt("numberQuestion");
+                                    List<Integer> questionOrder = new ArrayList<>();
+                                    for (int i = 0; i < numberQuestion; i++)
+                                        questionOrder.add(i);
+                                    Collections.shuffle(questionOrder);
 
-                                Intent intent = new Intent(UserName.this, Question.class);
-                                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                intent.putExtra("jsonConnection", String.valueOf(jsonConnection));
-                                intent.putExtra("code", code);
-                                intent.putExtra("codeTest", codeTest);
-                                intent.putExtra("name", name);
-                                intent.putIntegerArrayListExtra("questionOrder", (ArrayList<Integer>) questionOrder);
-                                startActivity(intent);
-                                overridePendingTransition(R.anim.fadein, R.anim.fadeout);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
+                                    Intent intent = new Intent(UserName.this, Question.class);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    intent.putExtra("jsonConnection", String.valueOf(jsonConnection));
+                                    intent.putExtra("code", code);
+                                    intent.putExtra("codeTest", codeTest);
+                                    intent.putExtra("name", name);
+                                    intent.putIntegerArrayListExtra("questionOrder", (ArrayList<Integer>) questionOrder);
+                                    startActivity(intent);
+                                    overridePendingTransition(R.anim.fadein, R.anim.fadeout);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                 }
-            }
-        }.start();
+            }.start();
+        }
     }
 }

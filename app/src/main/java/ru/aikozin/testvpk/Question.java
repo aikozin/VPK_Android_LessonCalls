@@ -35,6 +35,7 @@ public class Question extends AppCompatActivity {
 
     //массивы и объекты для хранения выбранных ответов и их отправки на сервак
     Handler handler = new Handler();
+    //для 1 типа
     RadioGroup radioGroup;
     int type, numberInApiTable, countAnswers;
 
