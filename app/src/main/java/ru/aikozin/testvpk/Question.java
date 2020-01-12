@@ -10,6 +10,7 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -60,11 +61,14 @@ public class Question extends AppCompatActivity {
 
         int order = 0;
         setAnswerOnView();
+        (findViewById(R.id.next)).setEnabled(false);
     }
 
     public void setAnswerOnView () {
         ((TextView) findViewById(R.id.numberQuestion)).setText(order + 1 + " вопрос из " + questionOrder.size());
         ((TextView) findViewById(R.id.name)).setText(name);
+        mainLayout.removeAllViews();
+        (findViewById(R.id.next)).setEnabled(false);
         try {
             JSONObject question = questions.getJSONObject(questionOrder.get(order));
             type = question.getInt("type");
@@ -90,6 +94,12 @@ public class Question extends AppCompatActivity {
                     radioButton.setTag(orderAnswer.get(i));
                     radioGroup.addView(radioButton);
                 }
+                radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(RadioGroup group, int checkedId) {
+                        (findViewById(R.id.next)).setEnabled(true);
+                    }
+                });
                 mainLayout.addView(radioGroup);
             }
 
@@ -145,7 +155,12 @@ public class Question extends AppCompatActivity {
                                     e.printStackTrace();
                                 }
                                 if (status == 101) {
-
+                                    order++;
+                                    if (order == questionOrder.size())
+                                        Toast.makeText(Question.this, "Молодец!", Toast.LENGTH_SHORT).show();
+                                    else {
+                                        setAnswerOnView();
+                                    }
                                 }
                             }
                         });
