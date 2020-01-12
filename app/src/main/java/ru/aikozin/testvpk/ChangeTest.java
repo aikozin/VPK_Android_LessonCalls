@@ -47,9 +47,9 @@ public class ChangeTest extends AppCompatActivity {
                 discipline.add(data.getJSONObject(i).getString("discipline"));
                 trainingGroup.add(data.getJSONObject(i).getString("trainingGroup"));
                 author.add(data.getJSONObject(i).getString("author"));
-                int date = data.getJSONObject(i).getInt("startTime");
+                long date = data.getJSONObject(i).getInt("startTime");
                 DateFormat df = new SimpleDateFormat("HH:mm");
-                String strDate = df.format(new Date(date));
+                String strDate = df.format(new Date(date * 1000));
                 startTime.add(strDate);
                 code.add(data.getJSONObject(i).getInt("code"));
                 codeTest.add(data.getJSONObject(i).getInt("codeTest"));
