@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -28,7 +29,7 @@ public class Question extends AppCompatActivity {
     JSONObject jsonConnection;
     int code, codeTest;
     List<Integer> questionOrder = new ArrayList<>();
-    int order;
+    int order = 0;
     LinearLayout mainLayout;
     JSONArray questions;
     String name;
@@ -37,6 +38,8 @@ public class Question extends AppCompatActivity {
     Handler handler = new Handler();
     //для 1 типа
     RadioGroup radioGroup;
+    //для 2 типа
+    List<CheckBox> idCheckboxes;
     int type, numberInApiTable, countAnswers;
 
     @Override
@@ -60,7 +63,6 @@ public class Question extends AppCompatActivity {
         codeTest = getIntent().getExtras().getInt("codeTest");
         questionOrder = getIntent().getExtras().getIntegerArrayList("questionOrder");
 
-        int order = 0;
         setAnswerOnView();
         (findViewById(R.id.next)).setEnabled(false);
     }
@@ -118,9 +120,19 @@ public class Question extends AppCompatActivity {
                     orderAnswer.add(i);
                 Collections.shuffle(orderAnswer);
                 //выводим ответы
+                countAnswers = answers.length();
+                idCheckboxes = new ArrayList<>();
                 for (int i = 0; i < answers.length(); i++) {
                     CheckBox checkBox = new CheckBox(Question.this);
                     checkBox.setText(answers.getString(orderAnswer.get(i)));
+                    checkBox.setTag(orderAnswer.get(i));
+                    idCheckboxes.add(checkBox);
+                    checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            (findViewById(R.id.next)).setEnabled(true);
+                        }
+                    });
                     mainLayout.addView(checkBox);
                 }
             }
@@ -130,8 +142,8 @@ public class Question extends AppCompatActivity {
     }
 
     public void onClickNext (View view) {
+        String answerString = "";
         if (type == 1) {
-            radioGroup.getCheckedRadioButtonId();
             int select = (int) (findViewById(radioGroup.getCheckedRadioButtonId())).getTag();
             int[] answer = new int[countAnswers];
             for (int i = 0; i < countAnswers; i++) {
@@ -140,34 +152,47 @@ public class Question extends AppCompatActivity {
                 else
                     answer[i] = 0;
             }
-            final String answerString = Arrays.toString(answer).replaceAll(" ", "");
-            new Thread() {
-                public void run() {
-                    String parameters = "type=%s&codeTest=%d&numberInApiTable=%d&numberQuestion=%d&answer=%s";
-                    parameters = String.format(parameters, "setAnswer", codeTest, numberInApiTable, questionOrder.get(order), answerString);
-                    final JSONObject jsonConnection = API.getJSON(parameters);
-                    if (jsonConnection != null) {
-                        handler.post(new Runnable() {
-                            public void run() {
-                                int status = 0;
-                                try {
-                                    status = jsonConnection.getInt("status");
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                                if (status == 101) {
-                                    order++;
-                                    if (order == questionOrder.size())
-                                        Toast.makeText(Question.this, "Молодец!", Toast.LENGTH_SHORT).show();
-                                    else {
-                                        setAnswerOnView();
-                                    }
+            answerString = Arrays.toString(answer).replaceAll(" ", "");
+        }
+        if (type == 2) {
+            int[] answer = new int[countAnswers];
+            for (int i = 0; i < countAnswers; i++) {
+                int tag = (int) idCheckboxes.get(i).getTag();
+                if (idCheckboxes.get(i).isChecked())
+                    answer[tag] = 1;
+                else
+                    answer[tag] = 0;
+            }
+            answerString = Arrays.toString(answer).replaceAll(" ", "");
+        }
+
+        final String finalAnswerString = answerString;
+        new Thread() {
+            public void run() {
+                String parameters = "type=%s&codeTest=%d&numberInApiTable=%d&numberQuestion=%d&answer=%s";
+                parameters = String.format(parameters, "setAnswer", codeTest, numberInApiTable, questionOrder.get(order), finalAnswerString);
+                final JSONObject jsonConnection = API.getJSON(parameters);
+                if (jsonConnection != null) {
+                    handler.post(new Runnable() {
+                        public void run() {
+                            int status = 0;
+                            try {
+                                status = jsonConnection.getInt("status");
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            if (status == 101) {
+                                order++;
+                                if (order == questionOrder.size())
+                                    Toast.makeText(Question.this, "Молодец!", Toast.LENGTH_SHORT).show();
+                                else {
+                                    setAnswerOnView();
                                 }
                             }
-                        });
-                    }
+                        }
+                    });
                 }
-            }.start();
-        }
+            }
+        }.start();
     }
 }
