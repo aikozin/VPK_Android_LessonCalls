@@ -1,6 +1,9 @@
 package ru.aikozin.testvpk;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
@@ -15,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,6 +31,11 @@ public class Question extends AppCompatActivity {
     LinearLayout mainLayout;
     JSONArray questions;
 
+    //массивы и объекты для хранения выбранных ответов и их отправки на сервак
+    Handler handler = new Handler();
+    RadioGroup radioGroup;
+    int type, numberInApiTable, countAnswers;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +47,7 @@ public class Question extends AppCompatActivity {
             //{"status":101,"numberQuestion":2,"questions":[{"number":"0","type":"1","question":"Как тебя зовут?","answer":["Рома","Коля","Петька"]},{"number":"1","type":"2","question":"Жопа?","answer":["Да","Нет","Конечно"]}],"numberInApiTable":"2"}
             jsonConnection = new JSONObject(getIntent().getExtras().getString("jsonConnection"));
             questions = jsonConnection.getJSONArray("questions");
+            numberInApiTable = jsonConnection.getInt("numberInApiTable");
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -51,7 +61,7 @@ public class Question extends AppCompatActivity {
         ((TextView) findViewById(R.id.name)).setText("Сашка");
         try {
             JSONObject question = questions.getJSONObject(questionOrder.get(order));
-            int type = question.getInt("type");
+            type = question.getInt("type");
             if (type == 1) {
                 //получаем текст вопроса и выводим на экран
                 TextView tvQuestion = new TextView(Question.this);
@@ -66,10 +76,12 @@ public class Question extends AppCompatActivity {
                     orderAnswer.add(i);
                 Collections.shuffle(orderAnswer);
                 //выводим ответы
-                RadioGroup radioGroup = new RadioGroup(Question.this);
-                for (int i = 0; i < answers.length(); i++) {
+                radioGroup = new RadioGroup(Question.this);
+                countAnswers = answers.length();
+                for (int i = 0; i < countAnswers; i++) {
                     RadioButton radioButton = new RadioButton(Question.this);
                     radioButton.setText(answers.getString(orderAnswer.get(i)));
+                    radioButton.setTag(orderAnswer.get(i));
                     radioGroup.addView(radioButton);
                 }
                 mainLayout.addView(radioGroup);
@@ -97,6 +109,44 @@ public class Question extends AppCompatActivity {
             }
         } catch (JSONException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void onClickNext (View view) {
+        if (type == 1) {
+            //http://192.168.0.7/vpk/test/php/api.php?type=setAnswer&codeTest=101&numberInApiTable=5&numberQuestion=1&answer=[1,1,0,1]
+            radioGroup.getCheckedRadioButtonId();
+            int select = (int) (findViewById(radioGroup.getCheckedRadioButtonId())).getTag();
+            int[] answer = new int[countAnswers];
+            for (int i = 0; i < countAnswers; i++) {
+                if (i == select)
+                    answer[i] = 1;
+                else
+                    answer[i] = 0;
+            }
+            final String answerString = Arrays.toString(answer).replaceAll(" ", "");
+            new Thread() {
+                public void run() {
+                    String parameters = "type=%s&codeTest=%d&numberInApiTable=%d&numberQuestion=%d&answer=%s";
+                    parameters = String.format(parameters, "setAnswer", codeTest, numberInApiTable, questionOrder.get(order), answerString);
+                    final JSONObject jsonConnection = API.getJSON(parameters);
+                    if (jsonConnection != null) {
+                        handler.post(new Runnable() {
+                            public void run() {
+                                int status = 0;
+                                try {
+                                    status = jsonConnection.getInt("status");
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                if (status == 101) {
+
+                                }
+                            }
+                        });
+                    }
+                }
+            }.start();
         }
     }
 }
